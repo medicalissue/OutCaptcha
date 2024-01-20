@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import math
 
-checkList = list(map(chr, list(range(65, 91)) + [33, 35, 36, 37, 38] + list(range(50, 58))))
+checkList = list(map(chr, list(range(65, 91)) + [33, 35, 36, 37, 38] + list(range(49, 58))))
 LENGTH = 7
 X = 230
 Y = 100
@@ -91,6 +91,23 @@ def rotate(img, x, y, z):
     return dst
 
 
+def sincos(img, l, amp):
+
+    rows, cols = img.shape[:2]
+
+    # 초기 매핑 배열 생성 ---①
+    mapy, mapx = np.indices((rows, cols), dtype=np.float32)
+
+    # sin, cos 함수를 적용한 변형 매핑 연산 ---②
+    sinx = mapx + amp * np.sin(mapy / l)
+    cosy = mapy + amp * np.cos(mapx / l)
+
+    # x,y 축 모두 sin, cos 곡선 적용 및 외곽 영역 보정
+    img_both = cv2.remap(img, sinx, cosy, cv2.INTER_LINEAR, \
+                         None, cv2.BORDER_REPLICATE)
+
+    return img_both
+
 def randxyz(rotval):
     x = random.randint(-rotval // 2, rotval // 2)
     rotval -= abs(x)
@@ -120,11 +137,12 @@ cv2.putText(captchaImg, toCaptcha, (textX, textY), FONT, FONT_SCALE, WHITE, FONT
 
 x, y, z = randxyz(90)
 captchaImg = rotate(captchaImg, x, y, z)
+captchaImg = ziggle(captchaImg, 800)
+captchaImg = sincos(captchaImg, 35 ,20)
 captchaImg = ziggle(captchaImg, 500)
 
-
-# cv2.imshow('captcha', captchaImg)
-# cv2.waitKey(1)
+cv2.imshow('captcha', captchaImg)
+cv2.waitKey(0)
 # ans = input("Solve the captcha: ")
 # ans = ans.upper()
 # if ans == toCaptcha:
